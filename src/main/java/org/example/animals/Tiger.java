@@ -4,7 +4,7 @@ import org.example.area.Ground;
 import org.example.food.*;
 import org.example.food_preferences.*;
 
-public class Tiger implements Animal, Ground, Predator {
+public class Tiger extends Predator implements Ground {
   @Override
   public void printGo() {
     System.out.println("Тигр идёт");

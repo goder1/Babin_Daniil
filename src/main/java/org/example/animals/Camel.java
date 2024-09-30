@@ -5,7 +5,7 @@ import org.example.food_preferences.*;
 import org.example.food.*;
 
 
-public class Camel implements Animal, Ground, Herbivorous {
+public class Camel extends Herbivorous implements Ground {
   @Override
   public void printGo() {
     System.out.println("Верблюд идёт");

@@ -4,7 +4,7 @@ import org.example.area.Air;
 import org.example.food.*;
 import org.example.food_preferences.*;
 
-public class Eagle implements Animal, Air, Predator {
+public class Eagle extends Predator implements Air {
   @Override
   public void printFly() {
     System.out.println("Орёл летит");

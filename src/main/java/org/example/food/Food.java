@@ -1,4 +1,4 @@
 package org.example.food;
 
-public interface Food {
+public abstract class Food {
 }
