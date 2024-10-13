@@ -4,6 +4,11 @@ import org.example.myArray.exceptions.EmptyArrayException;
 import org.example.myArray.exceptions.MyIndexOutOfBoundsException;
 import org.example.myArray.exceptions.NullArgumentException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+
 import static java.lang.Math.max;
 
 /**
@@ -39,6 +44,15 @@ public class CustomArrayList<T> implements CustomArrayListMethods<T> {
     currentIndex = objects.length;
   }
 
+  public CustomArrayList(ArrayList<Integer> list) {
+    capacity = max(list.size(), 16);
+    currentIndex = list.size();
+    for (int i = 0; i < currentIndex; i++) {
+      array[i] = list.get(i);
+    }
+    //System.arraycopy(list, 0, array = new Object[capacity], 0, list.size());
+  }
+
   /**
    * Default конструктор
    */
@@ -58,6 +72,34 @@ public class CustomArrayList<T> implements CustomArrayListMethods<T> {
     this.array = new Object[this.capacity];
     array[0] = value;
     this.currentIndex = 1;
+  }
+
+  public CustomArrayList(CustomArrayList<T> arr) {
+
+    this.capacity = arr.getCapacity();
+    this.array = new Object[this.capacity];
+    this.currentIndex = arr.getCurrentIndex();
+    for (int i = 0; i < currentIndex; i++) {
+      array[i] = arr.get(i);
+    }
+    //System.arraycopy(arr, 0, array, 0, arr.getCurrentIndex());
+//    System.out.println("help");
+
+
+  }
+
+  public CustomArrayList(List<T> arr) {
+
+    this.capacity = arr.size();
+    this.array = new Object[this.capacity];
+    this.currentIndex = arr.size();
+    for (int i = 0; i < currentIndex; i++) {
+      array[i] = arr.get(i);
+    }
+    //System.arraycopy(arr, 0, array, 0, arr.getCurrentIndex());
+//    System.out.println("help");
+
+
   }
 
   /**
@@ -100,6 +142,26 @@ public class CustomArrayList<T> implements CustomArrayListMethods<T> {
     currentIndex++;
   }
 
+  public void set(T value, int index) {
+    if (value == null) {
+      throw new NullArgumentException("Array element cannot be null");
+    }
+    if (index < 0 || index >= currentIndex) {
+      throw new MyIndexOutOfBoundsException("Index is out of array bounds");
+    }
+    array[index] = value;
+  }
+
+  public ArrayList<Integer> makeArrayList() {
+    ArrayList<Integer> result = new ArrayList<>(currentIndex);
+    for (int i = 0; i < currentIndex; i++) {
+//      result.set((Integer) array[i], i);
+      result.add((Integer) array[i]);
+    }
+    //System.arraycopy(array, 0, result, 0, array.length);
+    return result;
+  }
+
   /**
    * Метод, возвращающий элемент array с индексом index
    *
@@ -124,6 +186,8 @@ public class CustomArrayList<T> implements CustomArrayListMethods<T> {
   public int getCapacity() {
     return capacity;
   }
+
+  public int getCurrentIndex() { return currentIndex; }
 
   /**
    * Метод, убирающий элемент с индексом index из array,
@@ -159,5 +223,18 @@ public class CustomArrayList<T> implements CustomArrayListMethods<T> {
       System.out.print(array[i] + " ");
     }
     System.out.println();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    CustomArrayList<?> that = (CustomArrayList<?>) o;
+    return capacity == that.capacity && currentIndex == that.currentIndex && Objects.deepEquals(array, that.array);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(Arrays.hashCode(array), capacity, currentIndex);
   }
 }

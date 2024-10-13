@@ -4,57 +4,42 @@ import org.example.myArray.CustomArrayList;
 import org.example.myArray.exceptions.EmptyArrayException;
 import org.example.myArray.exceptions.MyIndexOutOfBoundsException;
 import org.example.myArray.exceptions.NullArgumentException;
+import org.example.sort_files.sortInterface.SortManager;
+import org.example.sort_files.sortInterface.SortTypes;
+import org.example.sort_files.sorts.BubbleSort;
+import org.example.sort_files.sorts.CollectionsSort;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class Main {
   public static void main(String[] args) {
-    CustomArrayList<Integer> arr1 = new CustomArrayList<>();
-    CustomArrayList<String> arr2 = new CustomArrayList<>("aba");
-    Double[] d = {1.2, 2.5, 6.0, 7.8, 1.0, 5.9, 6.2, 1.2, 1.2, 0.7};
-    CustomArrayList<Double> arr3 = new CustomArrayList<>(d);
+    Integer[] i = {1, 100, 10, 42, 69, 13, 7, 52, 228, 1337};
+    Integer[] i2 = {1000, 1};
+    CustomArrayList<Integer> arr = new CustomArrayList<>(i);
+    CustomArrayList<Integer> arr2 = new CustomArrayList<>(i2);
 
-    arr1.add(1);
-    arr1.add(2);
-    arr1.add(3);
-    arr1.printArray();
-    arr1.remove(1);
-    arr1.printArray();
+    CollectionsSort CollectionsSortMax8 = new CollectionsSort(8);
+    CollectionsSort CollectionsSortMax16 = new CollectionsSort(16);
+    BubbleSort bubbleSortMax8 = new BubbleSort(8);
+    BubbleSort bubbleSortMax32 = new BubbleSort(32);
 
-    arr2.printArray();
-    System.out.println("0 element: " + arr2.get(0));
-    arr2.remove(0);
-    arr2.printArray();
-
-    System.out.println("Capacity: " + arr3.getCapacity());
-    arr3.printArray();
-    for (int i = 0; i < 7; i++) {
-      arr3.add(1.1);
-    }
-    System.out.println("Capacity: " + arr3.getCapacity());
-    arr3.printArray();
-    arr3.remove(2);
-    System.out.println("Capacity: " + arr3.getCapacity());
-    arr3.printArray();
-
+    SortManager manager = new SortManager(Arrays.asList(CollectionsSortMax8, CollectionsSortMax16, bubbleSortMax8, bubbleSortMax32));
+    CustomArrayList<Integer> sortedList;
+    CustomArrayList<Integer> sortedList2;
     try {
-      arr3.add(null);
-    } catch (NullArgumentException e) {
-      System.out.println("NullArgumentException");
+      sortedList = manager.sort(arr, SortTypes.MERGE);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
-
     try {
-      arr3.get(-1);
-    } catch (MyIndexOutOfBoundsException e) {
-      System.out.println("MyIndexOutOfBoundsException");
+      sortedList2 = manager.sort(arr2, SortTypes.BUBBLE);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
-
-    arr1.remove(0);
-    arr1.remove(0);
-
-    try {
-      arr1.remove(0);
-    } catch (EmptyArrayException e) {
-      System.out.println("EmptyArrayException");
-    }
+    sortedList.printArray();
+    sortedList2.printArray();
+    sortedList.makeArrayList();
 
   }
 }
