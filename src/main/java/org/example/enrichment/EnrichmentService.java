@@ -10,7 +10,7 @@ public class EnrichmentService {
     this.enrichments = enrichments;
   }
 
-  public synchronized Message enrich(Message message) {
+  public synchronized Message enrich(Message message) throws IllegalArgumentException{
     if (message == null) {
       throw new IllegalArgumentException();
     }

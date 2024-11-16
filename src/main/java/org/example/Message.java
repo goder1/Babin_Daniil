@@ -17,7 +17,7 @@ public class Message {
   }
 
   public enum EnrichmentType {
-    MSISDN
+    MSISDN;
   }
 
   public void updateContent(String key, String value) {
