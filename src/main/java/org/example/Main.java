@@ -1,34 +1,34 @@
 package org.example;
 
-import org.example.food.*;
-import org.example.animals.*;
+import org.example.enrichment.EnrichByMsisdn;
+import org.example.enrichment.EnrichmentService;
+import org.example.user.InMemoryUserRepository;
+import org.example.user.User;
+import org.example.user.UserRepositoryInterface;
+
+import java.util.List;
+import java.util.Map;
 
 public class Main {
   public static void main(String[] args) {
-    Horse horse = new Horse();
-    Tiger tiger = new Tiger();
-    Camel camel = new Camel();
-    Eagle eagle = new Eagle();
-    Dolphin dolphin = new Dolphin();
+    UserRepositoryInterface userRepository = new InMemoryUserRepository();
+    userRepository.updateUserByMsisdn("88005553535", new User("Ivan", "Sidorov"));
+    EnrichmentService enrichmentService = new EnrichmentService(List.of(new EnrichByMsisdn(userRepository)));
 
-    Meat meat = new Meat();
-    Beef beef = new Beef();
-    Fish fish = new Fish();
-    Grass grass = new Grass();
-
-    horse.printEat(grass);
-    horse.printGo();
-
-    tiger.printEat(beef);
-    tiger.printGo();
-
-    camel.printEat(grass);
-    camel.printGo();
-
-    dolphin.printEat(fish);
-    dolphin.printSwim();
-
-    eagle.printFly();
-    eagle.printEat(grass);
+    Message message = new Message(
+            Map.of(
+                    "action", "button_click",
+                    "page", "book_card",
+                    "msisdn", "88005553535"
+            ),
+            Message.EnrichmentType.MSISDN
+    );
+    System.out.println("Original message: ");
+    message.content.forEach((key, value) -> System.out.println(key + ":" + value));
+    System.out.println("------------------");
+    Message result = enrichmentService.enrich(message);
+    System.out.println("Enriched message: ");
+    result.content.forEach((key, value) -> System.out.println(key + ":" + value));
+    System.out.println("------------------");
   }
 }
