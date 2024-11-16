@@ -1,4 +1,6 @@
 package org.example.food_preferences;
 
-public interface Predator {
+import org.example.animals.Animal;
+
+public abstract class Predator extends Animal {
 }
