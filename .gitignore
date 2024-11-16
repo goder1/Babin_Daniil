@@ -2,6 +2,11 @@ HELP.md
 .gitignore
 .idea/
 target/
+src/main/java/org/example/animals/
+src/main/java/org/example/food/
+src/main/java/org/example/food_preferences/
+src/main/java/org/example/sort_files/
+src/main/java/org/example/area/
 src/main/java/org/example/practice/
 *#
 *.iml
