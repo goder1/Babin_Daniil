@@ -1,1 +1,4 @@
 HELP.md
+.idea/
+dependency-reduced-pom.xml
+target/
