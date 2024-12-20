@@ -13,4 +13,5 @@ public interface ArticleRepository {
   void delete(long id) throws EntityNotFoundException;
   void update(Article article) throws EntityNotFoundException;
   Article getById(long id) throws EntityNotFoundException;
+  void createMultiple(List<Article> articles);
 }

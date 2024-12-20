@@ -1,5 +1,6 @@
 package org.example.controller.article;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.controller.Controller;
 import org.example.controller.ErrorResponse;
@@ -51,6 +52,38 @@ public class ArticleController implements Controller {
     findAll();
     delete();
     update();
+    createMultipleArticles();
+  }
+
+  private void createMultipleArticles() {
+    service.post(
+            "/api/articles-multiple",
+            (Request request, Response response) -> {
+              try {
+                response.type("application/json");
+                String body = request.body();
+                List<ArticleCreateRequest> articlesCreateRequest = objectMapper.readValue(
+                        body, new TypeReference<>() {
+                        });
+
+                List<Article> articleList = new ArrayList<>();
+
+                for (ArticleCreateRequest articleCreateRequest : articlesCreateRequest) {
+                  articleList.add(new Article(null, articleCreateRequest.name(), articleCreateRequest.tags()));
+                }
+
+                articleService.createMultiple(articleList);
+                response.status(201);
+                LOG.debug("Multiple articles created");
+
+                return objectMapper.writeValueAsString("Ok");
+              } catch (Throwable e) {
+                LOG.error(e.getMessage(), e);
+                response.status(500);
+                return objectMapper.writeValueAsString(new ErrorResponse(e.getMessage()));
+              }
+            }
+    );
   }
 
   private void createArticle() {

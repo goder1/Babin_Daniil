@@ -10,7 +10,6 @@ public interface CommentRepository {
   CommentId generateId();
   List<Comment> findAllByArticleId(long id);
   long create(Comment comment);
-  void delete(long id) throws EntityNotFoundException;
   void deleteByArticleId(long articleId);
   long getCountByArticleId(long id);
 }

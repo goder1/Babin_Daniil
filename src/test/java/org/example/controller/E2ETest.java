@@ -11,14 +11,20 @@ import org.example.entities.Article.ArticleId;
 import org.example.entities.Comment.Comment;
 import org.example.exceptions.EntityNotFoundException;
 import org.example.repository.article.ArticleRepository;
-import org.example.repository.article.InMemoryArticleRepository;
+import org.example.repository.article.PostgresArticleRepository;
 import org.example.repository.comment.CommentRepository;
-import org.example.repository.comment.InMemoryCommentRepository;
+import org.example.repository.comment.PostgresCommentRepository;
 import org.example.service.article.ArticleService;
 import org.example.service.comment.CommentService;
+import org.flywaydb.core.Flyway;
+import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import spark.Service;
 
 import java.io.IOException;
@@ -32,14 +38,34 @@ import java.util.Set;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
+@Testcontainers
 public class E2ETest {
+  @Container
+  public static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:14");
   private Service service;
   ObjectMapper objectMapper;
 
+  private static Jdbi jdbi;
+
+  @BeforeAll
+  static void beforeAll() {
+    String postgresJdbcUrl = POSTGRES.getJdbcUrl();
+    Flyway flyway =
+            Flyway.configure()
+                    .outOfOrder(true)
+                    .locations("classpath:db/migrations")
+                    .dataSource(postgresJdbcUrl, POSTGRES.getUsername(), POSTGRES.getPassword())
+                    .load();
+    flyway.migrate();
+    jdbi = Jdbi.create(postgresJdbcUrl, POSTGRES.getUsername(), POSTGRES.getPassword());
+  }
+
   @BeforeEach
   void beforeEach() {
-    service = Service.ignite();
     objectMapper = new ObjectMapper();
+    service = Service.ignite();
+    jdbi.useTransaction(handle -> handle.createUpdate("DELETE FROM article").execute());
+    jdbi.useTransaction(handle -> handle.createUpdate("DELETE FROM comment").execute());
   }
 
   @AfterEach
@@ -50,9 +76,9 @@ public class E2ETest {
 
   @Test
   void e2eTest() throws IOException, InterruptedException, EntityNotFoundException {
-    ArticleRepository articles = new InMemoryArticleRepository();
-    CommentRepository comments = new InMemoryCommentRepository();
-    ArticleService articleService = new ArticleService(articles, comments);
+    ArticleRepository articles = new PostgresArticleRepository(jdbi);
+    CommentRepository comments = new PostgresCommentRepository(jdbi);
+    ArticleService articleService = new ArticleService(articles, null);
     CommentService commentService = new CommentService(articles, comments);
 
     Application application = new Application(
@@ -88,8 +114,8 @@ public class E2ETest {
     assertEquals(0, articleComments.size());
 
     Article article = articles.getById(articleId);
-    assertEquals("swordart", article.getName());
-    assertEquals(Set.of("noth", "wrk"), article.getTags());
+    assertEquals("hop", article.getName());
+    assertEquals(Set.of("wow", "uwu"), article.getTags());
   }
 
   private void deleteComment(long commentId) throws IOException, InterruptedException {
@@ -114,7 +140,7 @@ public class E2ETest {
                             .PUT(
                                     HttpRequest.BodyPublishers.ofString(
                                             """
-                                                      { "name": "swordart", "tags": ["noth", "wrk"]}
+                                                      { "name": "hop", "tags": ["wow", "uwu"]}
                                                     """
                                     )
                             )
@@ -137,7 +163,7 @@ public class E2ETest {
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             """
-                                                      { "articleId": 1, "text": "bla-bla"}
+                                                      { "articleId": 1, "text": "comment"}
                                                     """
                                     )
                             )
@@ -160,7 +186,7 @@ public class E2ETest {
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             """
-                                                      { "name": "art", "tags": ["nothing", "works"]}
+                                                      { "name": "eee", "tags": ["kkk", "rrr"]}
                                                     """
                                     )
                             )

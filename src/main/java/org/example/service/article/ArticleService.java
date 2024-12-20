@@ -64,4 +64,8 @@ public class ArticleService {
       throw new ArticleUpdateException(e.getMessage(), e);
     }
   }
+
+  public void createMultiple(List<Article> articleList) {
+    articles.createMultiple(articleList);
+  }
 }

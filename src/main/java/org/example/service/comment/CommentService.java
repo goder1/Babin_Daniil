@@ -31,7 +31,7 @@ public class CommentService {
 
   public void delete(long id) throws CommentDeleteException {
     try {
-      comments.delete(id);
+      comments.deleteByArticleId(id);
     } catch (EntityNotFoundException e) {
       throw new CommentDeleteException(e.getMessage(), e);
     }

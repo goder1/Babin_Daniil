@@ -7,13 +7,19 @@ import org.example.entities.Article.Article;
 import org.example.entities.Article.ArticleId;
 import org.example.entities.Comment.Comment;
 import org.example.repository.article.ArticleRepository;
-import org.example.repository.article.InMemoryArticleRepository;
+import org.example.repository.article.PostgresArticleRepository;
 import org.example.repository.comment.CommentRepository;
-import org.example.repository.comment.InMemoryCommentRepository;
+import org.example.repository.comment.PostgresCommentRepository;
 import org.example.service.comment.CommentService;
+import org.flywaydb.core.Flyway;
+import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import spark.Service;
 
 import java.io.IOException;
@@ -28,12 +34,31 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Testcontainers
 class CommentControllerTest {
+  @Container
+  public static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:14");
+
   private Service service;
+  private static Jdbi jdbi;
+
+  @BeforeAll
+  static void beforeAll() {
+    String postgresJdbcUrl = POSTGRES.getJdbcUrl();
+    Flyway flyway =
+            Flyway.configure()
+                    .outOfOrder(true)
+                    .locations("classpath:db/migrations")
+                    .dataSource(postgresJdbcUrl, POSTGRES.getUsername(), POSTGRES.getPassword())
+                    .load();
+    flyway.migrate();
+    jdbi = Jdbi.create(postgresJdbcUrl, POSTGRES.getUsername(), POSTGRES.getPassword());
+  }
 
   @BeforeEach
   void beforeEach() {
     service = Service.ignite();
+    jdbi.useTransaction(handle -> handle.createUpdate("DELETE FROM article").execute());
   }
 
   @AfterEach
@@ -44,8 +69,8 @@ class CommentControllerTest {
 
   @Test
   void createNotExistsArticle() throws IOException, InterruptedException {
-    ArticleRepository articles = new InMemoryArticleRepository();
-    CommentRepository comments = new InMemoryCommentRepository();
+    ArticleRepository articles = new PostgresArticleRepository(jdbi);
+    CommentRepository comments = new PostgresCommentRepository(jdbi);
     CommentService commentService = new CommentService(articles, comments);
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -68,7 +93,7 @@ class CommentControllerTest {
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             """
-                                                      { "articleId": 1984, "text": "comment"}
+                                                      { "articleId": 1337, "text": "comment"}
                                                     """
                                     )
                             )
@@ -82,14 +107,15 @@ class CommentControllerTest {
 
   @Test
   void successfulCommentCreate() throws IOException, InterruptedException {
-    ArticleRepository articles = new InMemoryArticleRepository();
-    CommentRepository comments = new InMemoryCommentRepository();
+    ArticleRepository articles = new PostgresArticleRepository(jdbi);
+    CommentRepository comments = new PostgresCommentRepository(jdbi);
     CommentService commentService = new CommentService(articles, comments);
     ObjectMapper objectMapper = new ObjectMapper();
 
-    String articleName = "art";
-    Set<String> articleTags = Set.of("nothing", "works");
+    String articleName = "damn";
+    Set<String> articleTags = Set.of("ge", "nsh");
     Article article = new Article(articleName, articleTags);
+
     long articleId = articles.create(article);
 
     Application application = new Application(
@@ -111,7 +137,7 @@ class CommentControllerTest {
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             """
-                                                      { "articleId": 1, "text": "bla-bla"}
+                                                      { "articleId": 1, "text": "comment"}
                                                     """
                                     )
                             )
@@ -128,16 +154,17 @@ class CommentControllerTest {
 
   @Test
   void successfulCommentDelete() throws IOException, InterruptedException {
-    ArticleRepository articles = new InMemoryArticleRepository();
-    CommentRepository comments = new InMemoryCommentRepository();
+    ArticleRepository articles = new PostgresArticleRepository(jdbi);
+    CommentRepository comments = new PostgresCommentRepository(jdbi);
     CommentService commentService = new CommentService(articles, comments);
     ObjectMapper objectMapper = new ObjectMapper();
 
-    String articleName = "art";
-    Set<String> articleTags = Set.of("nothing", "works");
+    String articleName = "damn";
+    Set<String> articleTags = Set.of("ge", "nsh");
     Article article = new Article(articleName, articleTags);
+
     long articleId = articles.create(article);
-    comments.create(new Comment(new ArticleId(articleId), "bla-bla"));
+    comments.create(new Comment(null, new ArticleId(articleId), "comment"));
 
     Application application = new Application(
             List.of(
@@ -158,7 +185,7 @@ class CommentControllerTest {
                             .DELETE()
                             .uri(
                                     URI.create(
-                                            "http://localhost:%d/api/comments/%d".formatted(service.port(), 1)
+                                            "http://localhost:%d/api/comments/%d".formatted(service.port(), articleId)
                                     )
                             )
                             .build(),
@@ -170,8 +197,8 @@ class CommentControllerTest {
 
   @Test
   void deleteNotExistsComment() throws IOException, InterruptedException {
-    ArticleRepository articles = new InMemoryArticleRepository();
-    CommentRepository comments = new InMemoryCommentRepository();
+    ArticleRepository articles = new PostgresArticleRepository(jdbi);
+    CommentRepository comments = new PostgresCommentRepository(jdbi);
     CommentService commentService = new CommentService(articles, comments);
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -194,7 +221,7 @@ class CommentControllerTest {
                             .DELETE()
                             .uri(
                                     URI.create(
-                                            "http://localhost:%d/api/comments/%d".formatted(service.port(), 1984)
+                                            "http://localhost:%d/api/comments/%d".formatted(service.port(), 1337)
                                     )
                             )
                             .build(),
